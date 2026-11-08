@@ -9,6 +9,7 @@
 !/Midos-tunnel.sh
 !/docs/
 !/core/
+!/.github/
 
 # build output and local files inside the public tree
 /core/midos-tunnel

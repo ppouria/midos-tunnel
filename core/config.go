@@ -110,6 +110,10 @@ type Config struct {
 	Shape     bool `json:"shape"`
 	RotateSec int  `json:"rotate_sec"`
 
+	StallSec int `json:"stall_sec"`
+
+	MuxVersion int `json:"mux_version"`
+
 	// loopback address of a small JSON status endpoint, read by the web panel
 	StatsListen string `json:"stats_listen"`
 }
@@ -369,6 +373,9 @@ func (c *Config) normalize() error {
 	}
 	if c.SSHPort == 0 {
 		c.SSHPort = 22
+	}
+	if c.MuxVersion < 0 || c.MuxVersion > 2 {
+		return errors.New("mux_version must be 1 or 2")
 	}
 	if c.RotateSec != 0 && c.RotateSec < 30 {
 		return errors.New("rotate_sec must be 0 (off) or at least 30 seconds")

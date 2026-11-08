@@ -197,5 +197,5 @@ func handleStream(cfg *Config, st *smux.Stream, allowed, allowedUDP map[uint16]s
 			}
 		}
 	}
-	pipeCounted(st, out, stats.port("tcp", port))
+	pipeCounted(st, out, stats.port("tcp", port), cfg.stallLimit())
 }

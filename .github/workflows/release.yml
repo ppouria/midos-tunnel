@@ -1,0 +1,86 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to release, for example v2.6.6-1"
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        goarch: [amd64, arm64]
+    env:
+      TAG: ${{ github.event.inputs.tag || github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.tag || github.ref }}
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+          check-latest: true
+          cache-dependency-path: core/go.sum
+      - name: Test
+        working-directory: core
+        run: |
+          go install gotest.tools/gotestsum@latest
+          gotestsum --rerun-fails=2 --packages=./... -- -count=1 -timeout 10m -skip 'TestAuditTrail'
+      - name: Build
+        working-directory: core
+        env:
+          CGO_ENABLED: "0"
+          GOOS: linux
+          GOARCH: ${{ matrix.goarch }}
+        run: |
+          mkdir -p ../dist
+          name=midos-tunnel
+          [ "${{ matrix.goarch }}" = "arm64" ] && name=midos-tunnel-arm64
+          go build -trimpath -ldflags "-s -w -X main.version=${TAG#v}" -o ../dist/$name .
+          cd ../dist && sha256sum $name > $name.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ matrix.goarch }}
+          path: dist/
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    env:
+      TAG: ${{ github.event.inputs.tag || github.ref_name }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.tag || github.ref }}
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: release-*
+          path: dist
+          merge-multiple: true
+      - name: Assemble assets
+        run: |
+          echo "${TAG#v}" > dist/midos-tunnel.version
+          cp Midos-tunnel.sh install.sh uninstall.sh dist/
+      - uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: |
+            dist/midos-tunnel
+            dist/midos-tunnel-arm64
+      - name: Publish
+        run: |
+          prerelease=""
+          case "$TAG" in *-*) prerelease="--prerelease" ;; esac
+          gh release create "$TAG" dist/* --title "$TAG" --generate-notes $prerelease

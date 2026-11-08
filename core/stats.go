@@ -174,13 +174,13 @@ func (c countWriter) Write(p []byte) (int, error) {
 
 // pipeCounted is pipe with traffic accounting: user is the side facing the
 // user, svc the side facing the service.
-func pipeCounted(user, svc io.ReadWriteCloser, c *counters) {
+func pipeCounted(user, svc io.ReadWriteCloser, c *counters, stall time.Duration) {
 	c.total.Add(1)
 	c.active.Add(1)
 	defer c.active.Add(-1)
 	done := make(chan struct{}, 2)
-	go func() { _, _ = io.Copy(countWriter{svc, &c.up}, user); done <- struct{}{} }()
-	go func() { _, _ = io.Copy(countWriter{user, &c.down}, svc); done <- struct{}{} }()
+	go func() { _, _ = io.Copy(stallGuard(countWriter{svc, &c.up}, svc, stall), user); done <- struct{}{} }()
+	go func() { _, _ = io.Copy(stallGuard(countWriter{user, &c.down}, user, stall), svc); done <- struct{}{} }()
 	<-done
 	_ = user.Close()
 	_ = svc.Close()

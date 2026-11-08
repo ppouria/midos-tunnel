@@ -57,6 +57,8 @@ func newCarrierPool(cfg *Config) *carrierPool {
 	return p
 }
 
+const muxV2RecvBuffer = 1 << 30
+
 func smuxConfig(cfg *Config) *smux.Config {
 	t := cfg.tune()
 	c := smux.DefaultConfig()
@@ -64,6 +66,10 @@ func smuxConfig(cfg *Config) *smux.Config {
 	c.KeepAliveTimeout = 60 * time.Second
 	c.MaxReceiveBuffer = t.recvBuf
 	c.MaxStreamBuffer = t.streamBuf
+	if cfg.MuxVersion == 2 {
+		c.Version = 2
+		c.MaxReceiveBuffer = muxV2RecvBuffer
+	}
 	return c
 }
 
@@ -308,7 +314,7 @@ func serveLocal(cfg *Config, pool *carrierPool, local net.Conn, remote uint16) {
 	if err := writeTCPOpen(st, remote, user); err != nil {
 		return
 	}
-	pipeCounted(local, st, stats.port("tcp", remote))
+	pipeCounted(local, st, stats.port("tcp", remote), cfg.stallLimit())
 }
 
 // pipe copies in both directions and returns when either side is done.

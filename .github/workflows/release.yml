@@ -27,10 +27,13 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version-file: core/go.mod
+          check-latest: true
           cache-dependency-path: core/go.sum
       - name: Test
         working-directory: core
-        run: go test -count=1 -timeout 10m -skip 'TestAuditTrail' ./...
+        run: |
+          go install gotest.tools/gotestsum@latest
+          gotestsum --rerun-fails=2 --packages=./... -- -count=1 -timeout 10m -skip 'TestAuditTrail'
       - name: Build
         working-directory: core
         env:

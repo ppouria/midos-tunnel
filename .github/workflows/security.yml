@@ -26,6 +26,7 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version-file: core/go.mod
+          check-latest: true
           cache-dependency-path: core/go.sum
       - uses: github/codeql-action/init@v3
         with:
@@ -45,6 +46,7 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version-file: core/go.mod
+          check-latest: true
           cache-dependency-path: core/go.sum
       - name: govulncheck
         working-directory: core
@@ -62,6 +64,7 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version-file: core/go.mod
+          check-latest: true
           cache-dependency-path: core/go.sum
       - name: gosec
         working-directory: core

@@ -39,7 +39,7 @@ Run it as root on a Linux server. It asks nothing, shows a progress bar, and end
 | 🧭 **Web panel** | English and Persian (switch any time; English by default), installs in one line. Random port and secret path, captcha login, self-signed TLS or a free Let's Encrypt certificate from Settings. |
 | 🔁 **Three tunnel types** | **Direct** (the Iran server dials out), **reverse** (the abroad server dials in — no open port needed abroad) and **kernel** tunnels (ESP / ESP over UDP / MOI / FOU / full IPsec) with up to 32 abroad servers per Iran hub. |
 | 🛰️ **10 transports** | TLS with a real browser fingerprint, WebSocket and gRPC (CDN friendly), plain TCP, Stealth (random bytes on the wire), KCP + FEC and QUIC over UDP, DNS-shaped UDP, ICMP (ping only) and SSH. |
-| ⚡ **Built for bad links** | Several parallel carriers per tunnel, fallback endpoints, speed presets, UDP forwarding and PROXY protocol v2 so services see the user's real IP. |
+| ⚡ **Built for bad links** | Several parallel carriers per tunnel, fallback endpoints, speed presets, UDP forwarding and PROXY protocol v2 so services see the user's real IP. A user connection that stops reading is closed after two minutes, so it cannot freeze the carrier for everyone else, and multiplexer version 2 gives every user its own flow control. |
 | 🖥️ **Mother server & fleet** | Add Iran and abroad servers by IP and root password (used once). Each one is updated, gets every prerequisite, the tunnel binary and a benchmark automatically, then shows live CPU / RAM / disk / network on its card. Works over routes that cut SSH after a few seconds: every step runs on the server in the background and is followed with short connections, and large files are downloaded by the server instead of pushed. When a provider changes a server's IP, **Change IP** checks it is the same server at the new address and rebuilds all of its tunnels. |
 | 🗺️ **3D network designer** | Draw servers and cables (one-to-one or one-to-many) and apply them; the tunnels are built on both ends for you. A **multi-location** tunnel (one Iran server to several abroad servers, each location with its own ports and a port map showing which Iran port goes to which server) can also be built straight from the new-tunnel form, and every built tunnel has an **Edit** button to change its ports, transport or type later. |
 | 📊 **Operations** | Traffic for every tunnel (kernel and server-to-server ones included) with usage limits, health checks with one-click repair, route test from any of your servers, per-country benchmark, audit log, Telegram alerts, watchdog webhook, backup / restore. |
@@ -82,7 +82,7 @@ The installer installs the system packages, downloads the `midos-tunnel` binary 
 
 | Variable | Effect |
 |---|---|
-| `MIDOS_VERSION=v2.6.6` | install a specific release instead of the latest |
+| `MIDOS_VERSION=v2.6.7` | install a specific release instead of the latest |
 | `MIDOS_MIRROR=https://…` | download the release files from a mirror |
 | `MIDOS_PANEL_PORT=2053` | panel port on first install (random otherwise) |
 | `MIDOS_NO_KERNEL=1` | skip the kernel-tunnel base |
@@ -133,6 +133,12 @@ go test ./...
 
 The panel shows a small sponsor banner at the top; that is how this free project is funded. The code is source-available under the [LICENSE](LICENSE): you may use, modify and redistribute it, as long as the sponsor banner stays in place and visible in anything you redistribute or host for others.
 
+### Contributors
+
+- [@ppouria](https://github.com/ppouria) (Pouria): the stall guard that keeps one stuck user from freezing a relay tunnel's carrier, and multiplexer version 2 with per-user flow control (2.6.7)
+
+Pull requests are welcome.
+
 ---
 
 <a id="فارسی"></a>
@@ -148,7 +154,7 @@ The panel shows a small sponsor banner at the top; that is how this free project
 | 🧭 **پنل تحت وب** | دو زبانهٔ انگلیسی و فارسی (پیش‌فرض انگلیسی؛ با یک دکمه عوض می‌شود) و نصب یک‌خطی. پورت تصادفی و مسیر مخفی، ورود با کد امنیتی، گواهی self-signed یا گواهی رایگان Let's Encrypt از بخش تنظیمات. |
 | 🔁 **سه نوع تانل** | **مستقیم** (سرور ایران به خارج وصل می‌شود)، **معکوس** (سرور خارج به ایران وصل می‌شود؛ روی خارج پورت باز لازم نیست) و **کرنلی** (ESP، ESP روی UDP، MOI، FOU، IPsec کامل) با حداکثر ۳۲ سرور خارج برای هر سرور ایران. |
 | 🛰️ **۱۰ ترنسپورت** | TLS با اثرانگشت واقعی مرورگر، WebSocket و gRPC (سازگار با CDN)، TCP ساده، Stealth (روی سیم فقط بایت تصادفی)، KCP+FEC و QUIC روی UDP، UDP شبیه DNS، ICMP (جایی که فقط ping باز است) و SSH. |
-| ⚡ **مناسب مسیرهای ضعیف** | چند حامل موازی برای هر تانل، مسیرهای پشتیبان، پریست سرعت، انتقال UDP و پروتکل PROXY v2 تا سرویس‌ها IP واقعی کاربر را ببینند. |
+| ⚡ **مناسب مسیرهای ضعیف** | چند حامل موازی برای هر تانل، مسیرهای پشتیبان، پریست سرعت، انتقال UDP و پروتکل PROXY v2 تا سرویس‌ها IP واقعی کاربر را ببینند. اتصال کاربری که دیگر داده نمی‌خواند بعد از دو دقیقه بسته می‌شود تا حامل را برای بقیه از کار نیندازد، و نسخهٔ ۲ مالتی‌پلکسر به هر کاربر کنترل جریان جدا می‌دهد. |
 | 🖥️ **سرور مادر و ناوگان** | سرورهای ایران و خارج را با IP و رمز root (فقط یک بار) اضافه کنید. هر سرور خودکار به‌روز می‌شود، همهٔ پیش‌نیازها و باینری تانل رویش نصب و بنچمارک می‌شود و منابع زنده‌اش (CPU، RAM، دیسک، شبکه) روی کارتش دیده می‌شود. روی مسیرهایی که SSH را بعد از چند ثانیه قطع می‌کنند هم کار می‌کند: هر مرحله در پس‌زمینهٔ سرور اجرا و با اتصال‌های کوتاه دنبال می‌شود و فایل‌های بزرگ را خود سرور دانلود می‌کند. وقتی شرکت ارائه‌دهنده IP سروری را عوض کرد، **تغییر IP** بررسی می‌کند همان سرور روی آدرس تازه است و همهٔ تانل‌هایش را دوباره می‌سازد. |
 | 🗺️ **طراحی شبکهٔ سه‌بعدی** | سرورها و کابل‌ها را بکشید (دو به دو یا یک به چند) و اعمال کنید؛ تانل روی هر دو طرف ساخته می‌شود. تانل **چند لوکیشن** (یک سرور ایران به چند سرور خارج، هر لوکیشن با پورت‌های خودش و نقشهٔ پورتی که نشان می‌دهد هر پورت ایران به کدام سرور می‌رود) را می‌توانید مستقیم از فرم تانل جدید هم بسازید و هر تانل ساخته‌شده دکمهٔ **ویرایش** دارد تا بعداً پورت، ترنسپورت یا نوعش را عوض کنید. |
 | 📊 **مدیریت و پایش** | ترافیک همهٔ تانل‌ها (از جمله کرنلی و بین سرورها) و سقف مصرف، بررسی سلامت با تعمیر یک‌کلیکی، تست مسیر از هر کدام از سرورها، بنچمارک کشوربه‌کشور، گزارش ممیزی، هشدار تلگرام، وبهوک واچ‌داگ، پشتیبان‌گیری و بازیابی. |
@@ -185,7 +191,7 @@ bash <(curl -fsSL https://raw.githubusercontent.com/1Rootzen/midos-tunnel/main/u
 
 | متغیر | کاربرد |
 |---|---|
-| `MIDOS_VERSION=v2.6.6` | نصب یک نسخهٔ مشخص به‌جای آخرین نسخه |
+| `MIDOS_VERSION=v2.6.7` | نصب یک نسخهٔ مشخص به‌جای آخرین نسخه |
 | `MIDOS_MIRROR=https://…` | دانلود فایل‌های ریلیز از یک میرور |
 | `MIDOS_PANEL_PORT=2053` | پورت پنل در نصب اول (در غیر این صورت تصادفی) |
 | `MIDOS_NO_KERNEL=1` | آماده نکردن پایهٔ تانل کرنلی |
@@ -222,5 +228,11 @@ cd .. && CGO_ENABLED=0 go build -trimpath -ldflags "-s -w" -o midos-tunnel .
 ### بنر حامی و لایسنس
 
 در بالای پنل یک بنر کوچک حامی نمایش داده می‌شود؛ هزینهٔ این پروژهٔ رایگان از همین راه تأمین می‌شود. سورس طبق [LICENSE](LICENSE) در دسترس است: استفاده، تغییر و بازنشر آزاد است، به این شرط که بنر حامی در هر نسخه‌ای که منتشر می‌کنید یا برای دیگران روی سرور اجرا می‌کنید، سر جایش و قابل‌مشاهده بماند.
+
+### مشارکت‌کنندگان
+
+- [@ppouria](https://github.com/ppouria) (پوریا): محافظ گیر کردن جریان که نمی‌گذارد یک کاربر گیرکرده حامل یک تانل رله را از کار بیندازد، و نسخهٔ ۲ مالتی‌پلکسر با کنترل جریان جدا برای هر کاربر (۲.۶.۷)
+
+درخواست‌های ادغام (Pull Request) با خوشحالی پذیرفته می‌شوند.
 
 </div>

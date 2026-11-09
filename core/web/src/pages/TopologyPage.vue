@@ -7,7 +7,7 @@ import { fail, toast } from '../lib/toast.js';
 import { confirmBox } from '../lib/confirm.js';
 import { split, bytes, fa } from '../lib/format.js';
 import { t, i18n, pct } from '../lib/i18n.js';
-import { TRANSPORTS, PRESETS } from '../lib/constants.js';
+import { TRANSPORTS, PRESETS, MUX_VERSIONS, MUX_HELP } from '../lib/constants.js';
 import { NODE_STATE, roleOf, nodeName, cableState, cableRtt, localPorts } from '../lib/fleet.js';
 import { createEngine, KIND, CABLE, KERNEL_MODES, snap, cableType } from '../topology/engine.js';
 import { DEF_PORT, STATE_TEXT, uid, serialize, cableLabel, benchSummary } from '../topology/model.js';
@@ -71,7 +71,7 @@ const liveById = () => {
   for (const n of topo.nodes) if (!m[n.id]) m[n.id] = { ...n, role: role(n) };
   return m;
 };
-const CABLE_KEYS = ['kind', 'transport', 'port', 'ports', 'udp_ports', 'reverse', 'preset', 'carriers', 'mode', 'tunnel'];
+const CABLE_KEYS = ['kind', 'transport', 'port', 'ports', 'udp_ports', 'reverse', 'preset', 'carriers', 'mux_version', 'mode', 'tunnel'];
 const linkState = (l) => cableState(l, liveById());
 const linkRtt = (l) => cableRtt(l, liveById());
 
@@ -559,6 +559,9 @@ onBeforeUnmount(() => {
             <FormField :label="$t('پریست سرعت')"><select v-model="selLink.preset" :disabled="!!selLink.tunnel" @change="save"><option v-for="[v, t] in PRESETS" :key="v" :value="v">{{ $t(t) }}</option></select></FormField>
             <FormField :label="$t('تعداد حامل')"><input v-model.number="selLink.carriers" type="number" min="1" max="16" :disabled="!!selLink.tunnel" @input="save" /></FormField>
           </div>
+          <FormField :label="$t('مالتی‌پلکسر')" :hint="$t(MUX_HELP)">
+            <select :value="selLink.mux_version || 1" :disabled="!!selLink.tunnel" @change="selLink.mux_version = Number($event.target.value); save()"><option v-for="[v, n] in MUX_VERSIONS" :key="v" :value="v">{{ $t(n) }}</option></select>
+          </FormField>
         </template>
         <template v-else>
           <FormField :label="$t('نوع تانل کرنلی')" :hint="$t('نوع تانل کرنلی برای همهٔ کابل‌های کرنلی یک سرور ایران یکی است؛ پورت‌های هر کابل جداست.')">

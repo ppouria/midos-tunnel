@@ -12,7 +12,7 @@
 #  its link, user and password.
 #
 #  Environment (all optional):
-#      MIDOS_VERSION=v2.6.6      install this release instead of the latest
+#      MIDOS_VERSION=v2.6.7      install this release instead of the latest
 #      MIDOS_MIRROR=https://...  download the release files from a mirror
 #      MIDOS_PANEL_PORT=2053     panel port on first install (random otherwise)
 #      MIDOS_NO_KERNEL=1         skip the kernel-tunnel base

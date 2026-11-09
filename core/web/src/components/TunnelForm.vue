@@ -3,7 +3,7 @@ import { ref, reactive, computed, onMounted } from 'vue';
 import { api } from '../lib/api.js';
 import { fail, toast } from '../lib/toast.js';
 import { randomKey, split } from '../lib/format.js';
-import { TRANSPORTS, LISTENERS, PRESETS } from '../lib/constants.js';
+import { TRANSPORTS, LISTENERS, PRESETS, MUX_VERSIONS } from '../lib/constants.js';
 import SegControl from './SegControl.vue';
 import FormField from './FormField.vue';
 import AppIcon from './AppIcon.vue';
@@ -26,7 +26,7 @@ const f = reactive({
   targets: '127.0.0.1', sni: 'www.cloudflare.com', fp: 'chrome', carriers: 2, wsPath: '', hostHdr: '', httpListen: '',
   dataSh: 10, parSh: 3, proxy: false, decoy: '', grpcSvc: '',
   sshUser: '', sshPass: '', sshKey: '', sshPort: 22, sshRemote: '',
-  tlsFrag: false, shape: false, rotate: 0,
+  tlsFrag: false, shape: false, rotate: 0, mux: 1,
 });
 if (props.kind === 'kernel') f.direction = 'kernel';
 const endpoints = ref([{ transport: 'tls', server: '' }]);
@@ -63,6 +63,7 @@ function load(c) {
     dataSh: c.kcp_data_shards ?? 10, parSh: c.kcp_parity_shards ?? 3, proxy: !!c.proxy_protocol, decoy: c.decoy || '',
     grpcSvc: c.grpc_service || '', sshUser: c.ssh_user || '', sshPass: c.ssh_password || '', sshKey: c.ssh_key || '',
     sshPort: c.ssh_port || 22, sshRemote: c.ssh_remote || '', tlsFrag: !!c.tls_fragment, shape: !!c.shape, rotate: c.rotate_sec || 0,
+    mux: c.mux_version || 1,
   });
   const eps = c.endpoints && c.endpoints.length ? c.endpoints : c.server ? [{ transport: c.transport || 'tls', server: c.server }] : [{ transport: 'tls', server: '' }];
   endpoints.value = eps.map((e) => ({ transport: e.transport || 'tls', server: e.server || '' }));
@@ -81,6 +82,7 @@ function build() {
     kcp_data_shards: Number(f.dataSh), kcp_parity_shards: Number(f.parSh),
     proxy_protocol: f.proxy, insecure_tls: true, decoy: f.decoy.trim(), grpc_service: f.grpcSvc.trim(),
     tls_fragment: f.tlsFrag, shape: f.shape, rotate_sec: Number(f.rotate) || 0,
+    mux_version: Number(f.mux) === 2 ? 2 : 0,
   });
   delete c.server; delete c.transport;
   for (const k of ['ssh_user', 'ssh_password', 'ssh_key', 'ssh_port', 'ssh_remote']) delete c[k];
@@ -107,6 +109,7 @@ function build() {
   }
   if (f.mode === 'server') c.targets = f.targets.trim() || '127.0.0.1'; else delete c.targets;
   for (const k of Object.keys(c)) if (c[k] === '' || (Array.isArray(c[k]) && !c[k].length)) delete c[k];
+  if (!c.mux_version) delete c.mux_version;
   return c;
 }
 const preview = computed(() => JSON.stringify(build(), null, 2));
@@ -224,6 +227,9 @@ onMounted(async () => {
           <FormField :label="$t('اثرانگشت مرورگر')"><select v-model="f.fp"><option v-for="x in ['chrome', 'firefox', 'safari', 'edge', 'random']" :key="x" :value="x">{{ x }}</option></select></FormField>
           <FormField :label="$t('تعداد حامل‌های موازی')"><input v-model.number="f.carriers" type="number" min="1" max="16" /></FormField>
         </div>
+        <FormField :label="$t('مالتی‌پلکسر')" :hint="$t('در نسخهٔ ۲ کاربر کند بقیهٔ کاربران همان حامل را کند نمی‌کند. دستور «راه‌اندازی سمت مقابل» همین نسخه را به آن سمت می‌دهد؛ اگر سمت مقابل را دستی ساخته‌اید، آن را هم عوض کنید.')">
+          <select v-model.number="f.mux"><option v-for="[v, n] in MUX_VERSIONS" :key="v" :value="v">{{ $t(n) }}</option></select>
+        </FormField>
         <div class="row">
           <FormField :label="$t('مسیر WebSocket')" :hint="$t('برای ترنسپورت WebSocket و عبور از CDN')"><input v-model="f.wsPath" type="text" dir="ltr" placeholder="/secret-path" /></FormField>
           <FormField :label="$t('هدر Host')" :hint="$t('فقط وقتی از CDN استفاده می‌کنید')"><input v-model="f.hostHdr" type="text" dir="ltr" placeholder="cdn.example.com" /></FormField>

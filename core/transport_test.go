@@ -383,3 +383,37 @@ func TestLeanUDPNoFEC(t *testing.T) {
 	startPair(t, srv, cli)
 	relayRoundTrip(t, local, 128*1024)
 }
+
+func TestMuxV2EndToEnd(t *testing.T) {
+	for _, reverse := range []bool{false, true} {
+		name := "direct"
+		if reverse {
+			name = "reverse"
+		}
+		t.Run(name, func(t *testing.T) {
+			svc := freePort(t)
+			local := freePort(t)
+			echoServer(t, svc)
+			addr := fmt.Sprintf("127.0.0.1:%d", freePort(t))
+			ep := []Endpoint{{"tls", addr}}
+			srv := &Config{Mode: "server", PSK: testPSK, Targets: "127.0.0.1", ServerName: "www.example.com",
+				Ports: []string{fmt.Sprint(svc)}, Reverse: reverse, MuxVersion: 2}
+			cli := &Config{Mode: "client", PSK: testPSK, ServerName: "www.example.com", Fingerprint: "chrome",
+				Insecure: true, Carriers: 2, Ports: []string{fmt.Sprintf("%d:%d", local, svc)}, Reverse: reverse, MuxVersion: 2}
+			if reverse {
+				cli.Listen = addr
+				srv.Endpoints, srv.Insecure, srv.Fingerprint = ep, true, "chrome"
+				go func() { _ = runClient(cli) }()
+				time.Sleep(400 * time.Millisecond)
+				go func() { _ = runServer(srv) }()
+				time.Sleep(1500 * time.Millisecond)
+			} else {
+				srv.Listen = addr
+				cli.Endpoints = ep
+				startPair(t, srv, cli)
+			}
+			relayRoundTrip(t, local, 4<<20)
+			relayRoundTrip(t, local, 1)
+		})
+	}
+}

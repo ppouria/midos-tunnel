@@ -49,8 +49,10 @@ type topoLink struct {
 	Reverse   bool   `json:"reverse,omitempty"`
 	Preset    string `json:"preset,omitempty"`
 	Carriers  int    `json:"carriers,omitempty"`
-	Mode      string `json:"mode,omitempty"`   // kernel: esp, espudp, gre, fou, ipsec
-	Tunnel    string `json:"tunnel,omitempty"` // the tunnel this cable created
+	// direct cables: the multiplexer version both ends use (0 or 1 = v1, 2)
+	MuxVersion int    `json:"mux_version,omitempty"`
+	Mode       string `json:"mode,omitempty"`   // kernel: esp, espudp, gre, fou, ipsec
+	Tunnel     string `json:"tunnel,omitempty"` // the tunnel this cable created
 
 	// kernel cables of one Iran hub share a passphrase; each Kharej end keeps
 	// its slot so rebuilding the hub never renumbers the others

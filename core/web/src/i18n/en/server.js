@@ -47,6 +47,7 @@ export default {
   'این کابل هنوز اعمال نشده؛ آن را در طراحی شبکه تنظیم و اعمال کنید': 'This cable is not applied yet; set it up and apply it in the network designer',
   'نوع کابل باید مستقیم، معکوس یا کرنلی باشد': 'The cable type must be direct, reverse or kernel',
   'پورت حامل یا تعداد حامل معتبر نیست': 'The carrier port or carrier count is not valid',
+  'نسخهٔ مالتی‌پلکسر باید ۱ یا ۲ باشد': 'The multiplexer version must be 1 or 2',
   'این سرور پیدا نشد؛ صفحه را تازه کنید': 'This server was not found; reload the page',
   'این سرور هنوز نصب نشده است؛ آن را با IP تازه دوباره اضافه کنید': 'This server is not installed yet; add it again with the new IP',
   'نقش این سرور در طراحی شبکه «ایران» نیست و کابل دارد؛ آن را در طراحی شبکه درست کنید': "This server's role in the network designer is not Iran and it has cables; fix that in the designer",

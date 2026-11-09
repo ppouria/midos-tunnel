@@ -18,7 +18,8 @@ export function serialize(topo) {
     links: topo.links.map((l) => ({
       id: l.id, a: l.a, b: l.b, kind: l.kind, transport: l.transport || undefined, port: l.port || undefined,
       ports: l.ports || undefined, udp_ports: l.udp_ports || undefined, reverse: l.reverse || undefined,
-      preset: l.preset || undefined, carriers: l.carriers || undefined, mode: l.mode || undefined, tunnel: l.tunnel || undefined,
+      preset: l.preset || undefined, carriers: l.carriers || undefined, mux_version: l.mux_version > 1 ? l.mux_version : undefined,
+      mode: l.mode || undefined, tunnel: l.tunnel || undefined,
     })),
   };
 }

@@ -9,7 +9,7 @@ import (
 	"syscall"
 )
 
-var version = "2.6.6"
+var version = "2.6.7"
 
 // exitHooks undo what a relay changed on the system (the ICMP listener turns
 // the kernel's ping replies off) when it is told to stop.

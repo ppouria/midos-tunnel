@@ -17,7 +17,7 @@ import AddServerWindow from './AddServerWindow.vue';
 const emit = defineEmits(['done', 'cancel']);
 
 const fleet = ref({ self_role: 'none', nodes: [], links: [] });
-const f = reactive({ iran: '', kind: 'direct', reverse: false, transport: 'tls', port: 443, preset: 'balance', carriers: 2, mode: 'esp', ports: '', udp_ports: '' });
+const f = reactive({ iran: '', kind: 'direct', reverse: false, transport: 'tls', port: 443, preset: 'balance', carriers: 2, mux_version: 1, mode: 'esp', ports: '', udp_ports: '' });
 const blank = () => ({ node: '', ports: '', udp: '', port: '' });
 const rows = ref([blank()]);
 const adding = ref(false);
@@ -126,7 +126,7 @@ async function submit() {
   const list = rows.value.map((r, i) => ({ r, i })).filter(({ r }) => r.node);
   const links = list.map(({ r, i }) => ({
     a: f.iran, b: r.node, kind: f.kind, reverse: f.reverse, transport: f.transport, mode: f.mode,
-    port: perRowPort.value ? carrierPort(r, i) : Number(f.port) || 0, preset: f.preset, carriers: Number(f.carriers) || 0,
+    port: perRowPort.value ? carrierPort(r, i) : Number(f.port) || 0, preset: f.preset, carriers: Number(f.carriers) || 0, mux_version: Number(f.mux_version) || 1,
     ports: r.ports, udp_ports: r.udp,
   }));
   busy.value = true;

@@ -57,6 +57,24 @@ func newCarrierPool(cfg *Config) *carrierPool {
 	return p
 }
 
+// memTotal is the server's RAM in bytes (0 where it cannot be read); tests
+// replace it.
+var memTotal = func() uint64 { t, _ := readMem(); return t }
+
+// muxV2RecvBuffer is a carrier's receive cap with mux v2. Every stream has
+// its own window there, so the cap no longer has to be small to keep one slow
+// stream from starving the others; it only bounds what one carrier may hold
+// for many slow users at once. It grows with the server's memory: a sixteenth
+// of the RAM (a 1 GB server runs several carriers and tunnels), at most
+// 256 MB, and never below four times the preset's v1 cap.
+func muxV2RecvBuffer(t tuning) int {
+	ram := memTotal()
+	if ram == 0 {
+		ram = 1 << 30
+	}
+	return max(int(min(ram/16, 256<<20)), 4*t.recvBuf)
+}
+
 func smuxConfig(cfg *Config) *smux.Config {
 	t := cfg.tune()
 	c := smux.DefaultConfig()
@@ -64,6 +82,10 @@ func smuxConfig(cfg *Config) *smux.Config {
 	c.KeepAliveTimeout = 60 * time.Second
 	c.MaxReceiveBuffer = t.recvBuf
 	c.MaxStreamBuffer = t.streamBuf
+	if cfg.MuxVersion == 2 {
+		c.Version = 2
+		c.MaxReceiveBuffer = muxV2RecvBuffer(t)
+	}
 	return c
 }
 
@@ -308,7 +330,7 @@ func serveLocal(cfg *Config, pool *carrierPool, local net.Conn, remote uint16) {
 	if err := writeTCPOpen(st, remote, user); err != nil {
 		return
 	}
-	pipeCounted(local, st, stats.port("tcp", remote))
+	pipeCounted(local, st, stats.port("tcp", remote), cfg.stallLimit())
 }
 
 // pipe copies in both directions and returns when either side is done.

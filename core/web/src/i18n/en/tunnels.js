@@ -217,6 +217,13 @@ export default {
   'کابل‌های ناموفق در طراحی شبکه مانده‌اند؛ از آنجا درستشان کنید و دوباره اعمال کنید.': 'The cables that failed stay in the network designer; fix them there and apply them again.',
   'ساخت تانل‌ها روی همهٔ سرورها': 'Build the tunnels on every server',
   'مشاهدهٔ تانل‌ها': 'View tunnels',
+
+  // the multiplexer version (lib/constants.js MUX_VERSIONS)
+  'مالتی‌پلکسر': 'Multiplexer',
+  'نسخهٔ ۱ (پیش‌فرض)': 'Version 1 (default)',
+  'نسخهٔ ۲: کنترل جریان جدا برای هر کاربر': 'Version 2: separate flow control per user',
+  'در نسخهٔ ۲ کاربر کند بقیهٔ کاربران همان حامل را کند نمی‌کند. پنل هر دو سر را هم‌نسخه می‌کند؛ هر دو سرور باید ۲.۶.۷ یا جدیدتر باشند.': 'With version 2 a slow user no longer slows the other users of the same carrier. The panel sets both ends to the same version; both servers must run 2.6.7 or later.',
+  'در نسخهٔ ۲ کاربر کند بقیهٔ کاربران همان حامل را کند نمی‌کند. دستور «راه‌اندازی سمت مقابل» همین نسخه را به آن سمت می‌دهد؛ اگر سمت مقابل را دستی ساخته‌اید، آن را هم عوض کنید.': 'With version 2 a slow user no longer slows the other users of the same carrier. The "Set up the other side" command gives that side the same version; if you set the other side up by hand, change it there too.',
   'تانل‌های فعلی این سرور ایران': 'Tunnels this Iran server already has',
   'پورت‌های TCP این لوکیشن': "This location's TCP ports",
   'پورت‌های UDP این لوکیشن': "This location's UDP ports",

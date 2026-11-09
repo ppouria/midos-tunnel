@@ -1,0 +1,8 @@
+title = "midos-tunnel gitleaks config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "the built panel bundle only has a placeholder that names the OpenSSH key header, no key material"
+paths = ['''core/panelweb/assets/''']

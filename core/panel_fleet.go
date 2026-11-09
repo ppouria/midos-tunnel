@@ -1255,7 +1255,7 @@ func fleetDirectConfigs(l topoLink, name, iranHost, kharejHost string) (ic, kc *
 	}
 	c := &Config{
 		Mode: "client", Reverse: l.Reverse, PSK: randomToken(24), Name: name,
-		Preset: firstNonEmpty(l.Preset, "balance"), Carriers: carriers,
+		Preset: firstNonEmpty(l.Preset, "balance"), Carriers: carriers, MuxVersion: l.MuxVersion,
 		ServerName: "www.cloudflare.com", Fingerprint: "chrome", Insecure: true,
 		Ports: splitList(l.Ports), UDPPorts: splitList(l.UDPPorts),
 		StatsListen: fmt.Sprintf("127.0.0.1:%d", 38000+int(fnvHash(name)%900)),
@@ -1730,12 +1730,12 @@ func cableSettings(l, req topoLink) topoLink {
 	l.Kind, l.Ports, l.UDPPorts = req.Kind, req.Ports, req.UDPPorts
 	if l.Kind == "kernel" {
 		l.Mode = firstNonEmpty(req.Mode, "esp")
-		l.Transport, l.Port, l.Reverse, l.Preset, l.Carriers = "", 0, false, "", 0
+		l.Transport, l.Port, l.Reverse, l.Preset, l.Carriers, l.MuxVersion = "", 0, false, "", 0, 0
 		return l
 	}
 	l.Mode = ""
 	l.Transport, l.Port, l.Reverse = firstNonEmpty(req.Transport, "tls"), req.Port, req.Reverse
-	l.Preset, l.Carriers = firstNonEmpty(req.Preset, "balance"), req.Carriers
+	l.Preset, l.Carriers, l.MuxVersion = firstNonEmpty(req.Preset, "balance"), req.Carriers, req.MuxVersion
 	return l
 }
 
@@ -1807,6 +1807,9 @@ func checkCable(l topoLink) error {
 	}
 	if l.Port < 0 || l.Port > 65535 || l.Carriers < 0 || l.Carriers > 16 {
 		return errors.New("پورت حامل یا تعداد حامل معتبر نیست")
+	}
+	if l.MuxVersion < 0 || l.MuxVersion > 2 {
+		return errors.New("نسخهٔ مالتی‌پلکسر باید ۱ یا ۲ باشد")
 	}
 	if _, ok := presets[l.Preset]; !ok {
 		return fmt.Errorf("پریست %q شناخته نیست", l.Preset)

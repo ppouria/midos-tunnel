@@ -34,7 +34,14 @@ export const LISTENERS = [
   ['ssh_listen', 'ssh', 'SSH (از طریق sshd این سرور)', 8710, '127.0.0.1'],
 ];
 
-export const PRESETS = [['balance', 'متعادل'], ['turbo', 'توربو'], ['aggressive', 'تهاجمی'], ['throughput', 'حداکثر عبور']];
+// The multiplexer protocol a relay tunnel's carriers speak. Version 2 gives
+// every user connection its own flow window, so a slow user no longer holds
+// up the others on the same carrier; both ends must use the same version,
+// which the panel sets on both.
+export const MUX_VERSIONS = [[1, 'نسخهٔ ۱ (پیش‌فرض)'], [2, 'نسخهٔ ۲: کنترل جریان جدا برای هر کاربر']];
+export const MUX_HELP = 'در نسخهٔ ۲ کاربر کند بقیهٔ کاربران همان حامل را کند نمی‌کند. پنل هر دو سر را هم‌نسخه می‌کند؛ هر دو سرور باید ۲.۶.۷ یا جدیدتر باشند.';
+
+export const PRESETS =[['balance', 'متعادل'], ['turbo', 'توربو'], ['aggressive', 'تهاجمی'], ['throughput', 'حداکثر عبور']];
 export const presetName = (v) => t((PRESETS.find((p) => p[0] === v) || PRESETS[0])[1]);
 
 export const STATE_FA = { active: 'فعال', inactive: 'متوقف', failed: 'خطا', activating: 'در حال شروع', deactivating: 'در حال توقف', unknown: 'نامشخص' };

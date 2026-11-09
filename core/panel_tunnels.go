@@ -692,8 +692,10 @@ func peerConfig(c *Config, host string) (*Config, []string, error) {
 		Carriers: c.Carriers, Host: c.Host, WSPath: c.WSPath, GRPCService: c.GRPCService,
 		TLSFragment: c.TLSFragment, Shape: c.Shape, RotateSec: c.RotateSec,
 		KCPDataShards: c.KCPDataShards, KCPParityShards: c.KCPParityShards,
-		ProxyProtocol: c.ProxyProtocol,
-		StatsListen:   fmt.Sprintf("127.0.0.1:%d", 39000+int(fnvHash(c.Name)%900)),
+		ProxyProtocol: c.ProxyProtocol, StallSec: c.StallSec,
+		// both ends must speak the same multiplexer version
+		MuxVersion:  c.MuxVersion,
+		StatsListen: fmt.Sprintf("127.0.0.1:%d", 39000+int(fnvHash(c.Name)%900)),
 	}
 	maps, err := c.parsePorts()
 	if err != nil {

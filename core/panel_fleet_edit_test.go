@@ -264,6 +264,42 @@ func TestFleetKernelPortsAsTyped(t *testing.T) {
 	}
 }
 
+// mux v2 only works when both ends use it, so the panel sets it on both: the
+// other end's config of a tunnel, and both ends of a designer cable, also
+// after an edit.
+func TestMuxVersionReachesBothEnds(t *testing.T) {
+	c := &Config{Mode: "client", PSK: testPSK, Name: "x", Endpoints: []Endpoint{{"tls", "198.51.100.20:443"}}, Ports: []string{"443"}, MuxVersion: 2, StallSec: 60}
+	p, _, err := peerConfig(c, "198.51.100.10")
+	if err != nil || p.MuxVersion != 2 || p.StallSec != 60 {
+		t.Fatalf("peer config: %+v %v", p, err)
+	}
+
+	f := useFakeFleet(t)
+	pn := newTestPanel(t)
+	pn.login(testPassword)
+	ir := addServer(t, pn, "iran", "198.51.100.10")
+	kh := addServer(t, pn, "kharej", "198.51.100.20")
+	_ = pn.s.updateTopology(func(t *topology) error {
+		t.Links = append(t.Links, topoLink{ID: "lmux", A: ir, B: kh, Kind: "direct", Transport: "tls", Port: 8443, Ports: "443", MuxVersion: 2})
+		return nil
+	})
+	if w := pn.do("POST", "/api/fleet/apply", map[string]any{"id": "lmux"}, true); w.Code != http.StatusOK {
+		t.Fatalf("apply: %d %s", w.Code, w.Body)
+	}
+	if ic, kc := lastConfig(t, f.host("198.51.100.10")), lastConfig(t, f.host("198.51.100.20")); ic.MuxVersion != 2 || kc.MuxVersion != 2 {
+		t.Fatalf("mux version per end: iran %d kharej %d", ic.MuxVersion, kc.MuxVersion)
+	}
+	if w := pn.do("POST", "/api/fleet/edit", map[string]any{"id": "lmux", "kind": "direct", "transport": "tls", "port": 8443, "ports": "443", "mux_version": 1}, true); w.Code != http.StatusOK {
+		t.Fatalf("edit: %d %s", w.Code, w.Body)
+	}
+	if ic, kc := lastConfig(t, f.host("198.51.100.10")), lastConfig(t, f.host("198.51.100.20")); ic.MuxVersion != 1 || kc.MuxVersion != 1 {
+		t.Fatalf("after edit: iran %d kharej %d", ic.MuxVersion, kc.MuxVersion)
+	}
+	if w := pn.do("POST", "/api/fleet/edit", map[string]any{"id": "lmux", "kind": "direct", "transport": "tls", "ports": "443", "mux_version": 3}, true); w.Code != http.StatusBadRequest {
+		t.Fatalf("mux_version 3 accepted: %d", w.Code)
+	}
+}
+
 func TestIranPorts(t *testing.T) {
 	got := iranPorts("443, 2000-2002, 37826:37825, 9000-9001:9000, junk")
 	for _, p := range []int{443, 2000, 2001, 2002, 37826, 9000, 9001} {

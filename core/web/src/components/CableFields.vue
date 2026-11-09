@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from 'vue';
-import { TRANSPORTS, PRESETS, DEF_PORT } from '../lib/constants.js';
+import { TRANSPORTS, PRESETS, DEF_PORT, MUX_VERSIONS, MUX_HELP } from '../lib/constants.js';
 import { KERNEL_MODES, cableType } from '../lib/fleet.js';
 import SegControl from './SegControl.vue';
 import FormField from './FormField.vue';
@@ -25,6 +25,7 @@ function setKind(v) {
   l.port = l.port || DEF_PORT[l.transport] || 443;
   l.preset = l.preset || 'balance';
   l.carriers = l.carriers || 2;
+  l.mux_version = l.mux_version || 1;
 }
 // ICMP takes a single carrier; leaving it gives back the usual two
 let lastTransport = props.l.transport;
@@ -63,6 +64,9 @@ function setTransport() {
         <FormField :label="$t('پریست سرعت')"><select v-model="l.preset"><option v-for="[v, n] in PRESETS" :key="v" :value="v">{{ $t(n) }}</option></select></FormField>
         <FormField :label="$t('تعداد حامل')"><input v-model.number="l.carriers" type="number" min="1" max="16" :disabled="l.transport === 'icmp'" /></FormField>
       </div>
+      <FormField :label="$t('مالتی‌پلکسر')" :hint="$t(MUX_HELP)">
+        <select v-model.number="l.mux_version"><option v-for="[v, n] in MUX_VERSIONS" :key="v" :value="v">{{ $t(n) }}</option></select>
+      </FormField>
     </template>
     <template v-else>
       <FormField :label="$t('نوع تانل کرنلی')" :hint="$t('نوع تانل کرنلی برای همهٔ کابل‌های کرنلی یک سرور ایران یکی است؛ پورت‌های هر کابل جداست.')">

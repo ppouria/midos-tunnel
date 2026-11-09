@@ -13,6 +13,7 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"crypto/rand"
+	"crypto/sha256"
 	"crypto/subtle"
 	"crypto/x509"
 	"encoding/hex"
@@ -52,6 +53,7 @@ type PanelConfig struct {
 	BasePath     string `json:"base_path"`
 	Username     string `json:"username"`
 	PasswordHash string `json:"password_hash"`
+	APITokenHash string `json:"api_token_hash,omitempty"`
 	CertPEM      string `json:"cert_pem"`
 	KeyPEM       string `json:"key_pem"`
 	TunnelsDir   string `json:"tunnels_dir"`
@@ -155,6 +157,7 @@ func panelMain(args []string) {
 	user := fs.String("user", "admin", "init: administrator user name")
 	force := fs.Bool("force", false, "init: overwrite an existing configuration")
 	noService := fs.Bool("no-service", false, "init: do not install the systemd unit")
+	revoke := fs.Bool("revoke", false, "token: remove the API token instead of issuing one")
 	_ = fs.Parse(args)
 
 	var err error
@@ -167,8 +170,10 @@ func panelMain(args []string) {
 		err = panelResetPassword(*cfgPath)
 	case "url":
 		err = panelPrintURL(*cfgPath)
+	case "token":
+		err = panelAPIToken(*cfgPath, *revoke)
 	default:
-		err = fmt.Errorf("unknown command %q (run, init, passwd, url)", sub)
+		err = fmt.Errorf("unknown command %q (run, init, passwd, url, token)", sub)
 	}
 	if err != nil {
 		log.Fatal(err)
@@ -236,6 +241,34 @@ func panelResetPassword(path string) error {
 		return err
 	}
 	fmt.Printf("  New password for %s: %s\n  (restart the panel: systemctl restart midos-tunnel-panel)\n", c.Username, pass)
+	return nil
+}
+
+func panelAPIToken(path string, revoke bool) error {
+	c, err := loadPanelConfig(path)
+	if err != nil {
+		return err
+	}
+	if revoke {
+		c.APITokenHash = ""
+		if err := savePanelConfig(path, c); err != nil {
+			return err
+		}
+		fmt.Printf("  API token removed.\n  (restart the panel: systemctl restart midos-tunnel-panel)\n")
+		return nil
+	}
+	raw := make([]byte, 32)
+	if _, err := rand.Read(raw); err != nil {
+		return err
+	}
+	token := "mdt_" + hex.EncodeToString(raw)
+	sum := sha256.Sum256([]byte(token))
+	c.APITokenHash = hex.EncodeToString(sum[:])
+	if err := savePanelConfig(path, c); err != nil {
+		return err
+	}
+	fmt.Printf("\n  API token: %s\n\n  Send it as \"Authorization: Bearer <token>\" (and \"X-Midos: 1\" on changes).\n", token)
+	fmt.Printf("  It is stored only as a hash and replaces any earlier token.\n  (restart the panel: systemctl restart midos-tunnel-panel)\n\n")
 	return nil
 }
 
@@ -571,11 +604,31 @@ func (s *panelServer) mutating(next http.HandlerFunc) http.HandlerFunc {
 func (s *panelServer) authed(next http.HandlerFunc) http.HandlerFunc {
 	return s.mutating(func(w http.ResponseWriter, r *http.Request) {
 		if s.sessionID(r) == "" {
-			jsonError(w, http.StatusUnauthorized, "login required")
-			return
+			if !s.tokenOK(r) {
+				jsonError(w, http.StatusUnauthorized, "login required")
+				return
+			}
+			if r.Method != http.MethodGet {
+				s.audit(r, "api-token", r.Method+" "+r.URL.Path)
+			}
 		}
 		next(w, r)
 	})
+}
+
+func (s *panelServer) tokenOK(r *http.Request) bool {
+	token, ok := strings.CutPrefix(r.Header.Get("Authorization"), "Bearer ")
+	if !ok || token == "" {
+		return false
+	}
+	s.mu.Lock()
+	want := s.cfg.APITokenHash
+	s.mu.Unlock()
+	if want == "" {
+		return false
+	}
+	sum := sha256.Sum256([]byte(token))
+	return subtle.ConstantTimeCompare([]byte(hex.EncodeToString(sum[:])), []byte(want)) == 1
 }
 
 func clientIP(r *http.Request) string {
